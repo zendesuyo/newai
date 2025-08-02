@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Alice AI Chat</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: url("download.jpg") no-repeat center center fixed;
+      background-size: cover;
+      overflow: hidden;
+    }
+    .chat-container {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      max-height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .chat-box {
+      width: 100%;
+      max-width: 600px;
+      height: 70vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 15px;
+      box-sizing: border-box;
+    }
+    .message {
+      position: relative;
+      padding: 12px 18px;
+      border-radius: 18px;
+      max-width: 80%;
+      word-wrap: break-word;
+      background-color: rgba(255, 255, 255, 0.15);
+      color: white;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .message-info {
+        font-size: 0.7em;
+        opacity: 0.7;
+        margin-top: 5px;
+    }
+    .delete-btn {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: rgba(0,0,0,0.5);
+      border: none;
+      color: white;
+      font-size: 14px;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      display: none;
+      line-height: 20px;
+      text-align: center;
+    }
+    .message:hover .delete-btn {
+      display: block;
+    }
+    .user {
+      align-self: flex-end;
+      background-color: rgba(173, 216, 230, 0.25);
+    }
+    .ai {
+      align-self: flex-start;
+      background-color: rgba(255, 182, 193, 0.2);
+    }
+    .input-area {
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 12px;
+      border-radius: 20px;
+      border: none;
+      font-size: 1rem;
+      outline: none;
+      min-width: 200px;
+    }
+    button {
+      padding: 12px 20px;
+      border-radius: 20px;
+      background-color: #ff69b4;
+      border: none;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #ff3380;
+    }
+    .loading {
+      color: #fff;
+      font-size: 0.9rem;
+      opacity: 0.8;
+      font-style: italic;
+      align-self: flex-start;
+      animation: blink 1.2s infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 0.2; }
+      50% { opacity: 1; }
+    }
+    /* Edit menu */
+    .edit-menu {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.7);
+      padding: 15px;
+      border-radius: 12px;
+      color: white;
+      width: 280px;
+      max-height: 80vh;
+      overflow-y: auto;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 10;
+    }
+    .edit-menu input, .edit-menu textarea, .edit-menu select, .edit-menu button, .edit-menu label {
+      width: 100%;
+      padding: 8px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      font-size: 0.9rem;
+      box-sizing: border-box;
+      margin-bottom: 5px;
+    }
+    .edit-menu button {
+      margin-top: 5px;
+    }
+    .edit-btn {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background-color: #ff69b4;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: none;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .continue-btn {
+        background-color: #555;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        margin-top: 8px;
+        cursor: pointer;
+        border: none;
+    }
+    .continue-btn:hover {
+        background-color: #777;
+    }
+    .regenerate-btn {
+        background-color: #555;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        margin-top: 8px;
+        cursor: pointer;
+        border: none;
+    }
+    .regenerate-btn:hover {
+        background-color: #777;
+    }
+    .character-select {
+        width: 100%;
+        padding: 8px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+    .status-message {
+        color: #4CAF50;
+        font-size: 0.9rem;
+        text-align: center;
+        margin-top: 5px;
+    }
+    .group-settings {
+        background: rgba(255,255,255,0.1);
+        padding: 10px;
+        border-radius: 8px;
+        margin-top: 10px;
+    }
+    .character-tag {
+        display: inline-block;
+        background: rgba(255,255,255,0.2);
+        padding: 3px 8px;
+        border-radius: 12px;
+        margin: 2px;
+        font-size: 0.8rem;
+    }
+    .remove-character {
+        margin-left: 5px;
+        cursor: pointer;
+        color: #ff69b4;
+    }
+    .response-mode-selector {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        margin-top: 10px;
+    }
+    .response-mode {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .character-checkbox {
+        margin-right: 5px;
+    }
+  </style>
+</head>
+<body>
+<button class="edit-btn" onclick="toggleEditMenu()">Edit</button>
+
+<div class="edit-menu" id="editMenu">
+  <label>Ganti Background (URL):</label>
+  <input type="text" id="bgUrlInput" placeholder="https://contoh.com/bg.jpg" />
+  <label>Upload Background (File):</label>
+  <input type="file" id="bgFileInput" accept="image/*" />
+  
+  <label>Mode Chat:</label>
+  <select id="chatMode">
+    <option value="single">Single Character</option>
+    <option value="group">Group Chat</option>
+  </select>
+  
+  <div id="singleCharSettings">
+    <label>Karakter:</label>
+    <select id="characterSelect" class="character-select"></select>
+    <button onclick="addNewCharacter()">Tambah Karakter Baru</button>
+    <button onclick="saveCurrentCharacter()">Simpan Karakter</button>
+  </div>
+  
+  <div id="groupCharSettings" style="display:none;">
+    <label>Karakter dalam Grup:</label>
+    <div id="selectedCharacters"></div>
+    <select id="availableCharacters" class="character-select"></select>
+    <button onclick="addCharacterToGroup()">Tambahkan ke Grup</button>
+    
+    <div class="group-settings">
+      <label>Mode Respons Grup:</label>
+      <select id="groupResponseMode">
+        <option value="manual">Manual (Pilih siapa yang merespon)</option>
+        <option value="all">Otomatis (Semua merespon)</option>
+        <option value="smart">Cerdas (AI pilih yang merespon)</option>
+      </select>
+      
+      <div id="manualSelection" style="display:none; margin-top:10px;">
+        <label>Pilih yang akan merespon:</label>
+        <div id="characterCheckboxes" class="response-mode-selector"></div>
+      </div>
+    </div>
+  </div>
+  
+  <label>Nama Karakter:</label>
+  <input type="text" id="charNameInput" placeholder="Alice" />
+  
+  <label>Pilih Versi Gemini:</label>
+  <select id="geminiVersion">
+    <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+    <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+    <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+  </select>
+  
+  <label>NSFW Level:</label>
+  <select id="nsfwLevel">
+    <option value="low">Low (Safe)</option>
+    <option value="medium">Medium (Suggestive)</option>
+    <option value="high">High (Explicit)</option>
+    <option value="hentai">Hentai (Extreme)</option>
+  </select>
+  
+  <label>Edit Persona:</label>
+  <textarea id="personaInput" rows="5"></textarea>
+  
+  <label>Edit Profil Karakter:</label>
+  <textarea id="charProfile" rows="3"></textarea>
+  
+  <button onclick="saveChatFile()">Simpan Riwayat</button>
+  <label>Unggah Riwayat Chat:</label>
+  <input type="file" id="uploadChatFile" accept=".json" onchange="uploadChatFile(event)" />
+  <div id="uploadStatus" class="status-message"></div>
+  <button onclick="resetChat()">Reset Chat</button>
+</div>
+
+<div class="chat-container">
+  <div class="chat-box" id="chatBox"></div>
+  <div class="input-area">
+    <input type="text" id="userInput" placeholder="Ketik pesan di sini..." />
+    <button onclick="sendMessage()">Kirim</button>
+  </div>
+</div>
+
+<script>
+  const API_KEY = "GEMINI_API_KEY"; // Default API key
+  
+  const chatBox = document.getElementById("chatBox");
+  const personaInput = document.getElementById("personaInput");
+  const editMenu = document.getElementById("editMenu");
+  const characterSelect = document.getElementById("characterSelect");
+  const chatModeSelect = document.getElementById("chatMode");
+  const nsfwLevelSelect = document.getElementById("nsfwLevel");
+  const uploadStatus = document.getElementById("uploadStatus");
+  const singleCharSettings = document.getElementById("singleCharSettings");
+  const groupCharSettings = document.getElementById("groupCharSettings");
+  const selectedCharactersDiv = document.getElementById("selectedCharacters");
+  const availableCharactersSelect = document.getElementById("availableCharacters");
+  const groupResponseMode = document.getElementById("groupResponseMode");
+  const manualSelectionDiv = document.getElementById("manualSelection");
+  const characterCheckboxesDiv = document.getElementById("characterCheckboxes");
+  
+  let chatHistory = [];
+  let lastAIResponse = '';
+  let characters = {};
+  let currentCharacter = "default";
+  let currentChatMode = "single";
+  let groupMembers = [];
+  let currentGroupResponseMode = "manual";
+  
+  // Initialize characters
+  function initCharacters() {
+    const savedCharacters = localStorage.getItem('characters');
+    if (savedCharacters) {
+      characters = JSON.parse(savedCharacters);
+    } else {
+      // Default character
+      characters = {
+        "default": {
+          name: "Alice",
+          persona: "Kamu adalah Alice, seorang maid anime imut yang setia dan menyayangi tuannya, Aizen.",
+          profile: "",
+          nsfwLevel: "low",
+          model: "gemini-2.5-pro",
+          relationships: {}
+        }
+      };
+      saveCharacters();
+    }
+    
+    updateCharacterSelect();
+    loadCharacter(currentCharacter);
+    loadGroupSettings();
+  }
+  
+  // Load group settings from localStorage
+  function loadGroupSettings() {
+    const savedGroup = localStorage.getItem('groupSettings');
+    if (savedGroup) {
+      const groupData = JSON.parse(savedGroup);
+      groupMembers = groupData.members || [];
+      currentGroupResponseMode = groupData.responseMode || "manual";
+      groupResponseMode.value = currentGroupResponseMode;
+      updateGroupUI();
+    }
+  }
+  
+  // Save group settings to localStorage
+  function saveGroupSettings() {
+    localStorage.setItem('groupSettings', JSON.stringify({
+      members: groupMembers,
+      responseMode: currentGroupResponseMode
+    }));
+  }
+  
+  // Save characters to localStorage
+  function saveCharacters() {
+    localStorage.setItem('characters', JSON.stringify(characters));
+  }
+  
+  // Update character select dropdown
+  function updateCharacterSelect() {
+    characterSelect.innerHTML = '';
+    availableCharactersSelect.innerHTML = '';
+    
+    for (const id in characters) {
+      const option = document.createElement('option');
+      option.value = id;
+      option.textContent = characters[id].name;
+      characterSelect.appendChild(option);
+      
+      // Add to available characters for group
+      if (!groupMembers.includes(id)) {
+        const groupOption = document.createElement('option');
+        groupOption.value = id;
+        groupOption.textContent = characters[id].name;
+        availableCharactersSelect.appendChild(groupOption);
+      }
+    }
+    
+    characterSelect.value = currentCharacter;
+    updateCharacterCheckboxes();
+  }
+  
+  // Update character checkboxes for manual selection
+  function updateCharacterCheckboxes() {
+    characterCheckboxesDiv.innerHTML = '';
+    groupMembers.forEach(charId => {
+      const char = characters[charId];
+      if (char) {
+        const label = document.createElement('label');
+        label.className = "response-mode";
+        
+        const checkbox = document.createElement('input');
+        checkbox.type = "checkbox";
+        checkbox.className = "character-checkbox";
+        checkbox.value = charId;
+        checkbox.checked = true;
+        
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(char.name));
+        characterCheckboxesDiv.appendChild(label);
+      }
+    });
+  }
+  
+  // Update group UI
+  function updateGroupUI() {
+    selectedCharactersDiv.innerHTML = '';
+    groupMembers.forEach(charId => {
+      const char = characters[charId];
+      if (char) {
+        const tag = document.createElement('span');
+        tag.className = "character-tag";
+        tag.innerHTML = `${char.name} <span class="remove-character" onclick="removeCharacterFromGroup('${charId}')">×</span>`;
+        selectedCharactersDiv.appendChild(tag);
+      }
+    });
+    
+    updateCharacterSelect();
+    
+    // Show/hide manual selection based on mode
+    if (currentGroupResponseMode === "manual") {
+      manualSelectionDiv.style.display = "block";
+    } else {
+      manualSelectionDiv.style.display = "none";
+    }
+  }
+  
+  // Add character to group
+  function addCharacterToGroup() {
+    const charId = availableCharactersSelect.value;
+    if (charId && !groupMembers.includes(charId)) {
+      groupMembers.push(charId);
+      saveGroupSettings();
+      updateGroupUI();
+    }
+  }
+  
+  // Remove character from group
+  function removeCharacterFromGroup(charId) {
+    groupMembers = groupMembers.filter(id => id !== charId);
+    saveGroupSettings();
+    updateGroupUI();
+  }
+  
+  // Load character settings
+  function loadCharacter(characterId) {
+    if (characters[characterId]) {
+      const char = characters[characterId];
+      document.getElementById("charNameInput").value = char.name;
+      document.getElementById("personaInput").value = char.persona;
+      document.getElementById("charProfile").value = char.profile;
+      document.getElementById("nsfwLevel").value = char.nsfwLevel;
+      document.getElementById("geminiVersion").value = char.model;
+      currentCharacter = characterId;
+    }
+  }
+  
+  // Save current character settings
+  function saveCurrentCharacter() {
+    const characterId = currentCharacter;
+    characters[characterId] = {
+      name: document.getElementById("charNameInput").value,
+      persona: document.getElementById("personaInput").value,
+      profile: document.getElementById("charProfile").value,
+      nsfwLevel: document.getElementById("nsfwLevel").value,
+      model: document.getElementById("geminiVersion").value,
+      relationships: characters[characterId]?.relationships || {}
+    };
+    saveCharacters();
+    updateCharacterSelect();
+    alert(`Karakter ${characters[characterId].name} disimpan!`);
+  }
+  
+  // Add new character
+  function addNewCharacter() {
+    const newId = 'char_' + Date.now();
+    const newName = prompt("Masukkan nama karakter baru:");
+    if (newName) {
+      characters[newId] = {
+        name: newName,
+        persona: "Deskripsikan persona karakter baru ini...",
+        profile: "",
+        nsfwLevel: "low",
+        model: "gemini-2.5-pro",
+        relationships: {}
+      };
+      saveCharacters();
+      updateCharacterSelect();
+      currentCharacter = newId;
+      loadCharacter(newId);
+    }
+  }
+  
+  // Fungsi untuk memuat riwayat chat dari localStorage
+  function loadChatHistory() {
+      const savedChat = localStorage.getItem('chatHistory');
+      if (savedChat) {
+          try {
+              const parsedData = JSON.parse(savedChat);
+              
+              // Jika data berisi setting karakter
+              if (parsedData.characters) {
+                  characters = parsedData.characters;
+                  saveCharacters();
+                  currentCharacter = parsedData.currentCharacter || "default";
+                  loadCharacter(currentCharacter);
+              }
+              
+              // Jika data berisi setting grup
+              if (parsedData.groupSettings) {
+                  groupMembers = parsedData.groupSettings.members || [];
+                  currentGroupResponseMode = parsedData.groupSettings.responseMode || "manual";
+                  groupResponseMode.value = currentGroupResponseMode;
+                  updateGroupUI();
+              }
+              
+              // Jika data berisi riwayat chat
+              if (parsedData.chatHistory) {
+                  chatHistory = parsedData.chatHistory;
+                  renderChatHistory();
+              } else if (Array.isArray(parsedData)) {
+                  chatHistory = parsedData;
+                  renderChatHistory();
+              }
+              
+              // Update chat mode
+              if (parsedData.chatMode) {
+                  currentChatMode = parsedData.chatMode;
+                  chatModeSelect.value = currentChatMode;
+                  toggleChatModeUI();
+              }
+          } catch (e) {
+              console.error("Failed to load chat history from localStorage", e);
+              chatHistory = [];
+          }
+      }
+  }
+  
+  // Toggle chat mode UI
+  function toggleChatModeUI() {
+    if (currentChatMode === "single") {
+      singleCharSettings.style.display = "block";
+      groupCharSettings.style.display = "none";
+    } else {
+      singleCharSettings.style.display = "none";
+      groupCharSettings.style.display = "block";
+      updateGroupUI();
+    }
+  }
+  
+  // Render chat history to UI
+  function renderChatHistory() {
+      chatBox.innerHTML = '';
+      chatHistory.forEach(msg => {
+          if (msg.role === 'user') {
+              appendMessage(msg.parts[0].text, 'user', `Tokens: ${countTokens(msg.parts[0].text)}`);
+          } else if (msg.role === 'model') {
+              const charName = msg.character ? characters[msg.character]?.name || "AI" : "AI";
+              appendMessage(msg.parts[0].text, 'ai', `Tokens: ${countTokens(msg.parts[0].text)} | ${charName}`);
+          }
+      });
+  }
+  
+  // Fungsi untuk menyimpan riwayat chat ke localStorage
+  function saveChatHistory() {
+      localStorage.setItem('chatHistory', JSON.stringify({
+          chatHistory: chatHistory,
+          characters: characters,
+          currentCharacter: currentCharacter,
+          groupSettings: {
+              members: groupMembers,
+              responseMode: currentGroupResponseMode
+          },
+          chatMode: currentChatMode,
+          timestamp: new Date().toISOString()
+      }));
+  }
+  
+  let currentModel = localStorage.getItem("geminiVersion") || "gemini-2.5-pro";
+  document.getElementById("geminiVersion").value = currentModel;
+  
+  // Initialize
+  initCharacters();
+  loadChatHistory();
+  toggleChatModeUI();
+  
+  // Toggle Edit Menu
+  function toggleEditMenu() {
+    editMenu.style.display = editMenu.style.display === "flex" ? "none" : "flex";
+  }
+  
+  // Ganti background URL
+  document.getElementById("bgUrlInput").addEventListener("change", e => {
+    document.body.style.background = `url('${e.target.value}') no-repeat center center fixed`;
+    document.body.style.backgroundSize = "cover";
+  });
+  
+  // Ganti background dari file
+  document.getElementById("bgFileInput").addEventListener("change", e => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        document.body.style.background = `url('${ev.target.result}') no-repeat center center fixed`;
+        document.body.style.backgroundSize = "cover";
+      }
+      reader.readAsDataURL(file);
+    }
+  });
+  
+  // Simpan perubahan persona
+  personaInput.addEventListener("change", () => {
+    characters[currentCharacter].persona = personaInput.value;
+    saveCharacters();
+  });
+  
+  // Simpan perubahan model Gemini
+  document.getElementById("geminiVersion").addEventListener("change", e => {
+    currentModel = e.target.value;
+    characters[currentCharacter].model = currentModel;
+    saveCharacters();
+  });
+  
+  // Simpan perubahan NSFW level
+  nsfwLevelSelect.addEventListener("change", e => {
+    characters[currentCharacter].nsfwLevel = e.target.value;
+    saveCharacters();
+  });
+  
+  // Simpan perubahan nama karakter
+  document.getElementById("charNameInput").addEventListener("change", e => {
+    characters[currentCharacter].name = e.target.value;
+    saveCharacters();
+    updateCharacterSelect();
+  });
+  
+  // Simpan perubahan profil karakter
+  document.getElementById("charProfile").addEventListener("change", e => {
+    characters[currentCharacter].profile = e.target.value;
+    saveCharacters();
+  });
+  
+  // Ganti karakter yang aktif
+  characterSelect.addEventListener("change", e => {
+    currentCharacter = e.target.value;
+    loadCharacter(currentCharacter);
+  });
+  
+  // Ganti mode chat
+  chatModeSelect.addEventListener("change", e => {
+    currentChatMode = e.target.value;
+    toggleChatModeUI();
+    saveChatHistory();
+  });
+  
+  // Ganti mode respons grup
+  groupResponseMode.addEventListener("change", e => {
+    currentGroupResponseMode = e.target.value;
+    saveGroupSettings();
+    updateGroupUI();
+  });
+  
+  // Fungsi untuk menghapus semua pesan dan riwayat
+  function resetChat() {
+      chatBox.innerHTML = '';
+      chatHistory = []; 
+      localStorage.removeItem('chatHistory');
+  }
+  
+  // Fungsi untuk menghapus pesan spesifik dari tampilan dan riwayat
+  function deleteMessage(element) {
+      const messages = Array.from(chatBox.children);
+      const index = messages.indexOf(element);
+  
+      if (index !== -1 && index < chatHistory.length) {
+          chatHistory.splice(index, 1);
+          saveChatHistory();
+      }
+  
+      element.remove();
+  }
+  
+  // Fungsi untuk menghitung perkiraan token
+  function countTokens(text) {
+      return Math.ceil(text.length / 4);
+  }
+  
+  // Fitur 1: Simpan riwayat chat ke file
+  function saveChatFile() {
+      const dataToSave = {
+          chatHistory: chatHistory,
+          characters: characters,
+          currentCharacter: currentCharacter,
+          groupSettings: {
+              members: groupMembers,
+              responseMode: currentGroupResponseMode
+          },
+          chatMode: currentChatMode,
+          timestamp: new Date().toISOString()
+      };
+      
+      const blob = new Blob([JSON.stringify(dataToSave, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `chat_history_${new Date().toISOString().slice(0,10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      uploadStatus.textContent = "File chat berhasil diunduh!";
+      setTimeout(() => uploadStatus.textContent = "", 3000);
+  }
+  
+  // Fitur 2: Unggah riwayat chat
+  function uploadChatFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+  
+      const reader = new FileReader();
+      reader.onload = function(e) {
+          try {
+              const uploadedData = JSON.parse(e.target.result);
+              
+              // Validasi data yang diunggah
+              if (!uploadedData.chatHistory && !Array.isArray(uploadedData)) {
+                  throw new Error("Format file tidak valid");
+              }
+              
+              // Jika ada data karakter, load karakter
+              if (uploadedData.characters) {
+                  characters = uploadedData.characters;
+                  saveCharacters();
+                  currentCharacter = uploadedData.currentCharacter || "default";
+                  loadCharacter(currentCharacter);
+                  updateCharacterSelect();
+              }
+              
+              // Jika ada data grup, load grup
+              if (uploadedData.groupSettings) {
+                  groupMembers = uploadedData.groupSettings.members || [];
+                  currentGroupResponseMode = uploadedData.groupSettings.responseMode || "manual";
+                  groupResponseMode.value = currentGroupResponseMode;
+                  updateGroupUI();
+              }
+              
+              // Load chat mode
+              if (uploadedData.chatMode) {
+                  currentChatMode = uploadedData.chatMode;
+                  chatModeSelect.value = currentChatMode;
+                  toggleChatModeUI();
+              }
+              
+              // Load riwayat chat
+              if (uploadedData.chatHistory) {
+                  chatHistory = uploadedData.chatHistory;
+              } else {
+                  chatHistory = uploadedData;
+              }
+              
+              saveChatHistory();
+              renderChatHistory();
+              
+              uploadStatus.textContent = "File chat berhasil diunggah!";
+              setTimeout(() => uploadStatus.textContent = "", 3000);
+          } catch (err) {
+              uploadStatus.textContent = "Gagal mengunggah file: " + err.message;
+              console.error("Upload error:", err);
+          }
+      };
+      reader.readAsText(file);
+  }
+  
+  // Fungsi untuk regenerate response AI
+  async function regenerateResponse() {
+      if (chatHistory.length > 0 && chatHistory[chatHistory.length-1].role === 'model') {
+          // Hapus response terakhir
+          chatHistory.pop();
+          const lastMessageElement = chatBox.lastElementChild;
+          if (lastMessageElement) {
+              lastMessageElement.remove();
+          }
+          
+          // Kirim ulang request
+          const lastUserMessage = chatHistory[chatHistory.length-1].parts[0].text;
+          await sendToAI(lastUserMessage);
+      }
+  }
+  
+  // Fungsi untuk mendapatkan karakter yang akan merespon (mode cerdas)
+  async function getSmartResponders(userMessage) {
+    if (groupMembers.length === 0) return [];
+    
+    try {
+      // Buat prompt untuk menentukan siapa yang harus merespon
+      let prompt = `Dalam grup chat ini, ada beberapa karakter dengan persona berikut:\n\n`;
+      
+      groupMembers.forEach(charId => {
+        const char = characters[charId];
+        prompt += `- ${char.name}: ${char.persona}\n\n`;
+      });
+      
+      prompt += `Pesan dari user: "${userMessage}"\n\n`;
+      prompt += `Berdasarkan persona di atas dan pesan user, karakter mana yang paling relevan untuk merespon? `;
+      prompt += `Berikan hanya ID karakter yang dipisahkan koma, tanpa penjelasan lain. Contoh: "char_1,char_2"`;
+      
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${API_KEY}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{ text: prompt }]
+            }]
+          })
+        }
+      );
+      
+      const data = await response.json();
+      const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      
+      // Parse response
+      const selectedIds = reply.split(',').map(id => id.trim()).filter(id => groupMembers.includes(id));
+      return selectedIds.length > 0 ? selectedIds : [groupMembers[0]]; // Default ke karakter pertama jika tidak ada yang cocok
+    } catch (err) {
+      console.error("Error in smart responder selection:", err);
+      return [groupMembers[0]]; // Fallback ke karakter pertama jika error
+    }
+  }
+  
+  // Fungsi inti untuk mengirim pesan ke AI
+  async function sendToAI(text, isContinue = false) {
+      if (currentChatMode === "single") {
+          await sendSingleChat(text, isContinue);
+      } else {
+          await sendGroupChat(text, isContinue);
+      }
+  }
+  
+  // Kirim pesan ke single character
+  async function sendSingleChat(text, isContinue = false) {
+      const loadingMessage = appendMessage(characters[currentCharacter].name + " sedang mengetik...", "ai", '');
+      const startTime = performance.now();
+  
+      // Tambahkan NSFW level ke persona
+      let fullPersona = characters[currentCharacter].persona;
+      const nsfwLevel = characters[currentCharacter].nsfwLevel;
+      
+      if (nsfwLevel === "medium") {
+          fullPersona += "\n\nKamu boleh memberikan jawaban yang sedikit vulgar dan menggoda, tapi tetap menjaga kesopanan.";
+      } else if (nsfwLevel === "high") {
+          fullPersona += "\n\nKamu boleh memberikan jawaban yang vulgar, eksplisit, dan menggoda tanpa batasan.";
+      } else if (nsfwLevel === "hentai") {
+          fullPersona += "\n\nKamu sangat vulgar dan eksplisit dalam berbicara, selalu mengambil inisiatif untuk hal-hal yang bersifat seksual.";
+      }
+  
+      const initialPrompt = [
+        {
+          role: 'user',
+          parts: [{ text: fullPersona }]
+        },
+        {
+          role: 'model',
+          parts: [{ text: "Baik, Tuan. Ada yang bisa " + characters[currentCharacter].name + " bantu?" }]
+        }
+      ];
+  
+      const fullPrompt = [...initialPrompt, ...chatHistory];
+  
+      if (isContinue) {
+          fullPrompt.push({
+              role: 'user',
+              parts: [{ text: 'Lanjutkan balasan sebelumnya.' }]
+          });
+      }
+  
+      try {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${characters[currentCharacter].model}:generateContent?key=${API_KEY}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ contents: fullPrompt })
+          }
+        );
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error?.message || "Gagal mendapatkan respons dari API");
+        }
+        
+        const data = await response.json();
+        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, " + characters[currentCharacter].name + " tidak bisa menjawab saat ini~";
+  
+        const endTime = performance.now();
+        const generationTime = (endTime - startTime) / 1000;
+        const aiMessageTokenCount = countTokens(reply);
+  
+        const infoText = `Waktu: ${generationTime.toFixed(2)}s | Tokens: ${aiMessageTokenCount}`;
+  
+        // Hapus pesan loading dan perbarui tampilan
+        chatBox.removeChild(loadingMessage);
+  
+        if (isContinue) {
+            // Jika melanjutkan, tambahkan teks ke pesan terakhir
+            const lastMessageElement = chatBox.lastElementChild;
+            lastMessageElement.querySelector('div').innerText += " " + reply;
+            // Perbarui juga di chatHistory
+            const lastChat = chatHistory[chatHistory.length - 1];
+            if (lastChat.role === 'model') {
+                lastChat.parts[0].text += " " + reply;
+            }
+        } else {
+            // Jika pesan baru, tambahkan ke riwayat
+            const aiMessage = { 
+              role: 'model', 
+              parts: [{ text: reply }],
+              character: currentCharacter
+            };
+            chatHistory.push(aiMessage);
+            appendMessage(reply, "ai", `${infoText} | ${characters[currentCharacter].name}`);
+        }
+  
+        saveChatHistory();
+      } catch (err) {
+        chatBox.removeChild(loadingMessage);
+        appendMessage("Ups, koneksi ke server gagal: " + err.message, "ai");
+      }
+  }
+  
+  // Kirim pesan ke group chat
+  async function sendGroupChat(text, isContinue = false) {
+      if (groupMembers.length === 0) {
+          appendMessage("Tidak ada karakter dalam grup. Tambahkan karakter terlebih dahulu.", "ai");
+          return;
+      }
+  
+      let responders = [];
+      
+      // Tentukan siapa yang akan merespon berdasarkan mode
+      if (currentGroupResponseMode === "manual") {
+          // Ambil dari checkbox yang dipilih
+          const checkboxes = document.querySelectorAll('.character-checkbox:checked');
+          responders = Array.from(checkboxes).map(cb => cb.value);
+      } else if (currentGroupResponseMode === "all") {
+          // Semua karakter merespon
+          responders = [...groupMembers];
+      } else if (currentGroupResponseMode === "smart") {
+          // AI yang menentukan siapa merespon
+          responders = await getSmartResponders(text);
+      }
+      
+      if (responders.length === 0) {
+          responders = [groupMembers[0]]; // Fallback
+      }
+  
+      // Kirim pesan ke setiap responder
+      for (const charId of responders) {
+          const char = characters[charId];
+          if (!char) continue;
+          
+          const loadingMessage = appendMessage(char.name + " sedang mengetik...", "ai", '');
+          const startTime = performance.now();
+  
+          // Tambahkan NSFW level ke persona
+          let fullPersona = char.persona;
+          const nsfwLevel = char.nsfwLevel;
+          
+          if (nsfwLevel === "medium") {
+              fullPersona += "\n\nKamu boleh memberikan jawaban yang sedikit vulgar dan menggoda, tapi tetap menjaga kesopanan.";
+          } else if (nsfwLevel === "high") {
+              fullPersona += "\n\nKamu boleh memberikan jawaban yang vulgar, eksplisit, dan menggoda tanpa batasan.";
+          } else if (nsfwLevel === "hentai") {
+              fullPersona += "\n\nKamu sangat vulgar dan eksplisit dalam berbicara, selalu mengambil inisiatif untuk hal-hal yang bersifat seksual.";
+          }
+  
+          // Tambahkan konteks hubungan dengan karakter lain
+          if (Object.keys(char.relationships).length > 0) {
+              fullPersona += "\n\nHubunganmu dengan karakter lain:\n";
+              for (const otherCharId in char.relationships) {
+                  if (characters[otherCharId] && groupMembers.includes(otherCharId)) {
+                      fullPersona += `- ${characters[otherCharId].name}: ${char.relationships[otherCharId]}\n`;
+                  }
+              }
+          }
+  
+          const initialPrompt = [
+            {
+              role: 'user',
+              parts: [{ text: fullPersona }]
+            },
+            {
+              role: 'model',
+              parts: [{ text: "Baik, Tuan. Ada yang bisa " + char.name + " bantu?" }]
+            }
+          ];
+  
+          const fullPrompt = [...initialPrompt, ...chatHistory];
+  
+          if (isContinue) {
+              fullPrompt.push({
+                  role: 'user',
+                  parts: [{ text: 'Lanjutkan balasan sebelumnya.' }]
+              });
+          }
+  
+          try {
+            const response = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/${char.model}:generateContent?key=${API_KEY}`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ contents: fullPrompt })
+              }
+            );
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error?.message || "Gagal mendapatkan respons dari API");
+            }
+            
+            const data = await response.json();
+            const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, " + char.name + " tidak bisa menjawab saat ini~";
+  
+            const endTime = performance.now();
+            const generationTime = (endTime - startTime) / 1000;
+            const aiMessageTokenCount = countTokens(reply);
+  
+            const infoText = `Waktu: ${generationTime.toFixed(2)}s | Tokens: ${aiMessageTokenCount}`;
+  
+            // Hapus pesan loading dan perbarui tampilan
+            chatBox.removeChild(loadingMessage);
+  
+            if (isContinue) {
+                // Jika melanjutkan, tambahkan teks ke pesan terakhir dari karakter ini
+                const lastCharMessage = [...chatHistory].reverse().find(msg => 
+                  msg.role === 'model' && msg.character === charId
+                );
+                
+                if (lastCharMessage) {
+                    const lastMessageElement = Array.from(chatBox.children).find(el => 
+                      el.querySelector('div')?.innerText.includes(lastCharMessage.parts[0].text.split(' ')[0])
+                    );
+                    
+                    if (lastMessageElement) {
+                        lastMessageElement.querySelector('div').innerText += " " + reply;
+                        lastCharMessage.parts[0].text += " " + reply;
+                    }
+                }
+            } else {
+                // Jika pesan baru, tambahkan ke riwayat
+                const aiMessage = { 
+                  role: 'model', 
+                  parts: [{ text: reply }],
+                  character: charId
+                };
+                chatHistory.push(aiMessage);
+                appendMessage(reply, "ai", `${infoText} | ${char.name}`);
+            }
+  
+            saveChatHistory();
+          } catch (err) {
+            chatBox.removeChild(loadingMessage);
+            appendMessage(`Ups, ${char.name} tidak bisa menjawab: ${err.message}`, "ai");
+          }
+      }
+  }
+  
+  // Kirim pesan dari input teks
+  function sendMessage() {
+      const input = document.getElementById("userInput");
+      const text = input.value.trim();
+      if (!text) return;
+  
+      chatHistory.push({ role: 'user', parts: [{ text: text }] });
+      const userMessageTokenCount = countTokens(text);
+      appendMessage(text, "user", `Tokens: ${userMessageTokenCount}`);
+      input.value = "";
+      saveChatHistory();
+  
+      sendToAI(text);
+  }
+  
+  // Tambahkan pesan ke UI
+  function appendMessage(message, sender, info = '') {
+      const msgContainer = document.createElement("div");
+      msgContainer.className = `message ${sender}`;
+  
+      const msgText = document.createElement("div");
+      msgText.innerText = message;
+  
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "delete-btn";
+      deleteBtn.innerText = "x";
+      deleteBtn.onclick = () => deleteMessage(msgContainer);
+  
+      msgContainer.appendChild(msgText);
+      msgContainer.appendChild(deleteBtn);
+  
+      if (info) {
+          const infoSpan = document.createElement("div");
+          infoSpan.className = "message-info";
+          infoSpan.innerText = info;
+          msgContainer.appendChild(infoSpan);
+      }
+  
+      // Tambahkan tombol "Lanjutkan" untuk balasan AI
+      if (sender === 'ai' && !message.includes("sedang mengetik")) {
+          const continueBtn = document.createElement("button");
+          continueBtn.className = "continue-btn";
+          continueBtn.innerText = "Lanjutkan";
+          continueBtn.onclick = () => sendToAI('', true);
+          msgContainer.appendChild(continueBtn);
+          
+          // Tambahkan tombol "Regenerate"
+          const regenerateBtn = document.createElement("button");
+          regenerateBtn.className = "regenerate-btn";
+          regenerateBtn.innerText = "Regenerate";
+          regenerateBtn.onclick = regenerateResponse;
+          msgContainer.appendChild(regenerateBtn);
+      }
+  
+      if (message.includes("sedang mengetik")) {
+          msgContainer.classList.add("loading");
+      }
+  
+      chatBox.appendChild(msgContainer);
+      chatBox.scrollTop = chatBox.scrollHeight;
+      return msgContainer;
+  }
+</script>
+</body>
+</html>

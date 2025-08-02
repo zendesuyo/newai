@@ -320,8 +320,7 @@
 </div>
 
 <script>
-  const API_KEY = "GEMINI_API_KEY"; // Default API key
-  
+  const API_KEY = process.env.GEMINI_API_KEY;  // Hanya untuk build (Next.js/React)
   const chatBox = document.getElementById("chatBox");
   const personaInput = document.getElementById("personaInput");
   const editMenu = document.getElementById("editMenu");
